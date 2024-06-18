@@ -96,7 +96,6 @@ impl Rope {
     }
 
     pub fn split_from_idx(&self, index: usize) -> (Option<RopeNode>, Option<RopeNode>) {
-        println!("index: {}", index);
         let (left, right) = self.split_recursive(&self.root, index);
 
         (Some(left.unwrap()), Some(right.unwrap()))
@@ -118,11 +117,6 @@ impl Rope {
                     weight: val[index..].to_string().len(),
                 };
 
-                println!(
-                    "value in left: {:?} \n in right: {:?}",
-                    val[..index].to_string(),
-                    val[index..].to_string()
-                );
                 (Some(left), Some(right))
             }
             RopeNode::Internal {
@@ -153,5 +147,34 @@ impl Rope {
                 }
             }
         }
+    }
+
+    pub fn insert_at_index(&self, val: &str, index: usize) -> Result<Rope, Error> {
+        let (leftmost, rightmost) = self.split_from_idx(index);
+        let middle = Rope::new(val).unwrap();
+
+        let left_rope = Rope {
+            root: leftmost.unwrap(),
+        };
+        let right_rope = Rope {
+            root: rightmost.unwrap(),
+        };
+
+        let rp1 = Rope::concate(left_rope, middle).unwrap();
+        let rp2 = Rope::concate(rp1, right_rope);
+
+        Ok(rp2.unwrap())
+    }
+
+    pub fn delete_between_index(&self, start: usize, end: usize) -> Result<Rope, Error> {
+        let (r1, _r2) = self.split_from_idx(start);
+        let (_r3, r4) = self.split_from_idx(end);
+
+        let new_left = Rope { root: r1.unwrap() };
+        let new_right = Rope { root: r4.unwrap() };
+
+        let ans = Rope::concate(new_left, new_right);
+
+        Ok(ans.unwrap())
     }
 }

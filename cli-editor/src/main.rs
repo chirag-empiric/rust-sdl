@@ -19,9 +19,12 @@ fn main() {
     let _ = concat3.traverse();
     println!(); // for line break
 
-    let _split1 = concat3.split_from_idx(3);
-    println!("Left {:?}", _split1.0);
-    println!("Right {:?}", _split1.1);
+    let _ = concat3.clone().split_from_idx(3);
+
+    let inseted = concat3.insert_at_index("dhoom", 4);
+
+    let del = ds::Rope::delete_between_index(&inseted.unwrap(), 4, 10);
+    let _ = del.unwrap().clone().traverse();
 
     /* let mut editor = Editor::default();
     editor.run(); */
