@@ -28,7 +28,11 @@ impl Editor {
 
     fn repl(&mut self) -> Result<(), std::io::Error> {
         loop {
+            let _ = crossterm::cursor::Hide;
+
             self.refresh_screen().unwrap();
+
+            let _ = crossterm::cursor::Show;
 
             if self.should_quit {
                 break;
@@ -47,7 +51,7 @@ impl Editor {
         }) = event
         {
             match code {
-                Char('q') if *modifiers == KeyModifiers::CONTROL => {
+                Char('x') if *modifiers == KeyModifiers::CONTROL => {
                     self.should_quit = true;
                 }
                 _ => {
@@ -60,7 +64,6 @@ impl Editor {
             }
         }
     }
-
     fn refresh_screen(&self) -> Result<(), std::io::Error> {
         if self.should_quit {
             Terminal::clear_screen();
