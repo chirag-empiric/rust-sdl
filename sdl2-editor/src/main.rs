@@ -1,7 +1,8 @@
 mod canvas;
-// mod input;
+mod input;
 use canvas::render;
 
+use input::Rope;
 use sdl2::{
     event::Event,
     keyboard::{Keycode, Mod},
@@ -10,7 +11,8 @@ use sdl2::{
 use std::path::Path;
 
 fn main() -> Result<(), String> {
-    let mut userinput: Vec<char> = Vec::new();
+    let mut data = input::Rope::new("").unwrap();
+    let mut cursor_at = 0;
 
     // SDL Config - Move in another module
     let sdl = sdl2::init().unwrap();
@@ -30,7 +32,7 @@ fn main() -> Result<(), String> {
 
     let font = ttf_context.load_font(font_path, font_size).unwrap();
     let mut event_pump = sdl.event_pump().unwrap();
-    let mut old = 15;
+    let old = 15;
 
     canvas.set_draw_color(Color::WHITE);
     canvas.clear();
@@ -40,71 +42,74 @@ fn main() -> Result<(), String> {
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
-                Event::TextInput {
-                    timestamp,
-                    window_id,
-                    text,
-                } => {
-                    println!("timestamp: {timestamp}, window_id:{window_id}, text: {text}");
-                    let ch: Vec<char> = text.chars().collect();
-                    userinput.push(ch[0]);
-                    let str = String::from_iter(userinput.iter());
-                    let old_val =
-                        render(&mut canvas, &texture_creator, &font, &str, old, Keycode::A);
-
-                    old = old_val.unwrap();
-                    println!("old value: {}", old);
+                // write s#it
+                Event::TextInput { text, .. } => {
                     // regarding tree
+                    data = Rope::add_trailing(data.clone(), &text).unwrap();
+
+                    let _ = render(
+                        &mut canvas,
+                        &texture_creator,
+                        &font,
+                        &data.traverse().unwrap(),
+                        old,
+                    );
+                    cursor_at += 1;
                 }
-                Event::KeyDown {
-                    keycode: Some(Keycode::Return),
-                    ..
-                } => {
-                    //
-                    userinput.push('\n');
-                }
+                // backspace
                 Event::KeyDown {
                     keycode: Some(Keycode::Backspace),
                     ..
                 } => {
-                    //
-                    userinput.pop();
-                    let str = String::from_iter(userinput.iter());
-                    let old_val = render(
+                    // regarding tree
+
+                    println!("From {:?} to {:?}", cursor_at - 2, cursor_at - 1);
+                    let response = data.delete_between_index(cursor_at - 2, cursor_at - 1);
+                    data = response.unwrap();
+                    println!("{:?}", data);
+                    let _ = render(
                         &mut canvas,
                         &texture_creator,
                         &font,
-                        &str,
+                        &data.traverse().unwrap(),
                         old,
-                        Keycode::Backspace,
                     );
-                    old = old_val.unwrap_or_else(|_| 20);
-                    // regarding tree
+
+                    cursor_at -= 1;
                 }
-                Event::KeyUp {
+                // moving cursor
+                Event::KeyDown {
                     keycode: Some(Keycode::Left),
                     ..
                 } => {
-                    //
-                    println!("Back arrow");
+                    cursor_at -= 1;
                 }
-                Event::KeyUp {
+                Event::KeyDown {
                     keycode: Some(Keycode::Right),
                     ..
                 } => {
-                    //
-                    println!("Forwared arrow key")
+                    cursor_at += 1;
                 }
                 Event::KeyDown {
-                    keycode: Some(Keycode::A),
+                    timestamp,
+                    keycode: Some(Keycode::S),
                     keymod,
                     ..
                 } => {
                     if keymod.contains(Mod::LCTRLMOD) || keymod.contains(Mod::RCTRLMOD) {
-                        println!("Ctrl + A detected");
-                        // Your functionality for Ctrl + A
+                        println!("creating dir");
+                        let new = data.traverse().unwrap().parse::<String>();
+                        let filepath = format!(
+                            "./src/files/{}_{}.txt",
+                            timestamp.to_string(),
+                            new.clone().unwrap()
+                        );
+
+                        let r = std::fs::write(filepath, new.unwrap());
+                        println!("{:?}", r.unwrap());
                     }
                 }
+                // Quit stuff
                 Event::KeyDown {
                     keycode: Some(Keycode::X),
                     keymod,

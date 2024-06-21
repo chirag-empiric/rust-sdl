@@ -1,5 +1,4 @@
 use sdl2::{
-    keyboard::Keycode,
     pixels::Color,
     rect::Rect,
     render::{TextureCreator, WindowCanvas},
@@ -12,11 +11,10 @@ pub fn render(
     font: &sdl2::ttf::Font,
     input: &str,
     old: u32,
-    operation: Keycode,
 ) -> Result<u32, String> {
     canvas.clear();
 
-    println!("USer input is: {}", input);
+    let length = input.len();
     let surface = font
         .render(input)
         .blended(Color::BLACK)
@@ -26,15 +24,7 @@ pub fn render(
         .create_texture_from_surface(&surface)
         .map_err(|e| e.to_string())?;
 
-    let target;
-    if operation == Keycode::Backspace {
-        target = Rect::new(100 as i32, 0 as i32, old - 15 as u32, 40 as u32);
-        canvas.copy(&texture, None, Some(target))?;
-        canvas.present();
-        return Ok(old - 15);
-    } else {
-        target = Rect::new(100 as i32, 0 as i32, old + 15 as u32, 40 as u32);
-    }
+    let target = Rect::new(100 as i32, 0 as i32, length as u32 * 15 as u32, 40 as u32);
     canvas.copy(&texture, None, Some(target))?;
     canvas.present();
     Ok(old + 15)
